@@ -1,0 +1,71 @@
+---
+# Task для подготовки к запуску
+
+- name: Create folders
+  ansible.builtin.file:
+    path: "/{{ dir_root }}/{{ item }}"
+    state: directory
+  with_items:
+    - gitflic/data/repo
+    - gitflic/data/img
+    - gitflic/data/cicd
+    - gitflic/data/cert
+    - gitflic/data/log
+    - gitflic/data/registry
+    - gitflic/data/releases
+    - docker/gitflic
+    - docker/postgres
+
+- name: Copy Dockerfile for gitflit
+  ansible.builtin.template:
+    src: templates/Dockerfile-gitflic.j2
+    dest: /{{ dir_root }}/docker/gitflic/Dockerfile
+
+- name: Copy application.properties for gitflit
+  ansible.builtin.template:
+    src: templates/application.properties.j2
+    dest: /{{ dir_root }}/docker/gitflic/application.properties
+
+- name: Copy Dockerfile for postgres
+  ansible.builtin.template:
+    src: templates/Dockerfile-posrtgress.j2
+    dest: /{{ dir_root }}/docker/postgres/Dockerfile
+
+- name: Copy pgcrypto.sh for postgres
+  ansible.builtin.template:
+    src: templates/pgcrypto.sh.j2
+    dest: /{{ dir_root }}/docker/postgres/pgcrypto.sh
+
+- name: Copy docker-compose file
+  ansible.builtin.template:
+    src: templates/docker-compose.yml.j2
+    dest: /{{ dir_root }}/docker-compose.yml
+
+- name: Copy ENV-file for docker-compose
+  ansible.builtin.template:
+    src: templates/ENV.j2
+    dest: /{{ dir_root }}/ENV.env
+
+- name: Copy gitflic.jar
+  ansible.builtin.copy:
+    src: gitflic.jar
+    dest: /{{ dir_root }}/docker/gitflic/ 
+
+- name: Generate an OpenSSH keypair with a ed25519
+  community.crypto.openssh_keypair:
+    path: /{{ dir_root }}/gitflic/data/cert/key.pem
+    type: ed25519
+
+- name: Set default port ssh on 2222
+  become: true
+  ansible.builtin.lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^Port"
+    line: "Port 2222"
+
+- name: Restart service ssh
+  become: true
+  ansible.builtin.systemd: 
+    name: ssh
+    state: restarted
+    daemon_reload: yes

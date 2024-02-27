@@ -1,0 +1,8 @@
+FROM openjdk:11.0.14.1-jdk
+RUN mkdir -p /var/log/gitflic && mkdir -p /opt/gitflic/cert && mkdir -p /var/gitflic/
+RUN for d in cicd repo img releases registry; do mkdir -p "/var/gitflic/$d"; done;
+COPY gitflic.jar /opt/gitflic
+# COPY docker/application.properties /etc/gitflic/
+COPY application.properties /etc/gitflic/
+WORKDIR /opt/gitflic
+ENTRYPOINT ["java", "-Dspring.config.additional-location=/etc/gitflic/application.properties" ,"-jar", "/opt/gitflic/gitflic.jar"]

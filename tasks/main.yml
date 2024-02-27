@@ -1,0 +1,11 @@
+---
+# tasks file for gitflic-role
+
+- name: Gitflic | Install docker
+  include_tasks: install-docker.yml
+
+- name: Gitflic | Run prestart
+  include_tasks: prestart.yml
+
+- name: Gitflic | Run services
+  include_tasks: start.yml

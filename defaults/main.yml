@@ -1,0 +1,4 @@
+---
+# defaults file for gitflic-role
+
+dir_root: home/{{ ansible_user }}

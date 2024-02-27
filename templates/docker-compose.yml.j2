@@ -1,0 +1,88 @@
+# Переменные окружения (environment) объявлены в .env файле.
+#
+version: "3.9"
+
+networks:
+  git_net:
+    external: false
+
+services:
+  gitflic:
+# Название контейнера
+    container_name: gitflic
+
+    # Директория с gitflic Dockerfile файлом.
+    build: ./docker/gitflic/
+#    build: 
+#      context: '{{ dir_root }}'
+#      dockerfile: ./docker/gitflic/Dockerfile
+
+    # Монтирование директорий (слева обозначены пути на хост машине, справа - пути контейнера)
+    volumes:
+      - ${HOST_LOG_PATH}:/var/log/gitflic/
+      - ${HOST_REPO_DIR}:/var/gitflic/repo/
+      - ${HOST_IMG_DIR}:/var/gitflic/img/
+      - ${HOST_RELEASES_DIR}:/var/gitflic/releases/
+      - ${HOST_CICD_DIR}:/var/gitflic/cicd/
+      - ${HOST_SSH_CERT}:/opt/gitflic/cert/
+      - ${HOST_REG_PACK_DIR}:/var/gitflic/registry/
+
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      SSH_SERVER_PORT: ${SSH_SERVER_PORT}
+
+      POSTGRES_CONTAINER_NAME: ${POSTGRES_CONTAINER_NAME}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASS: ${POSTGRES_PASS}
+
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      SENDER_NAME: ${SENDER_NAME}
+      SENDER_EMAIL: ${SENDER_EMAIL}
+
+      GITFLIC_BASE_URL: http://${GITFLIC_BASE_URL}:${SERVER_PORT}
+      GITFLIC_TRANSPORT_URL: http://${GITFLIC_TRANSPORT_URL}:${SERVER_PORT}
+
+    networks:
+      - git_net
+
+    # Настройка нужных портов
+    ports:
+      - "${HOST_PORT}:${SERVER_PORT}"
+      - "${HOST_SSH_PORT}:${SSH_SERVER_PORT}"
+    depends_on:
+      - redis
+      - postgres
+
+  postgres:
+    container_name: postgres
+    
+    # Директория с postgress Dockerfile файлом.
+    build: ./docker/postgres/
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - git_net
+
+    # Монтирование директорий
+    volumes:
+      - ${HOST_POSTGRES_VOLUME}:${SERVER_POSTGRES_VOLUME}
+
+  redis:
+    container_name: redis
+    image: redis:6.2-alpine
+    command: redis-server 
+    networks:
+      - git_net
+
+    # Монтирование директорий
+    volumes:
+      - ${HOST_REDIS_VOLUME}:${SERVER_REDIS_VOLUME}

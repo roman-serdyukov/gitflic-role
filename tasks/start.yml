@@ -1,0 +1,14 @@
+---
+# Task для запуска из Docker-compose
+
+- name: Create and start services 
+  become: true
+  community.docker.docker_compose:
+    project_src: /{{ dir_root }}
+    env_file: /{{ dir_root }}/ENV.env
+    build: true
+  register: output
+
+- name: Show output
+  debug:
+    var: output
